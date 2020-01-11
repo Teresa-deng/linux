@@ -1,0 +1,17 @@
+---
+- hosts: all
+  remote_user: root
+  vars:
+  - zabbix_server: 192.168.101.208
+  tasks:
+    - name: 传输zabbix-agent安装包
+      copy: src=zabbix-agent-4.0.16-1.el7.x86_64.rpm dest=/tmp
+
+    - name: 安装zabbix-agent
+      shell: rpm -ivh  /tmp/zabbix-agent-4.0.16-1.el7.x86_64.rpm
+
+    - name: 复制zabbix-agent配置文件
+      template: src=zabbix_agentd.conf.j2 dest=/etc/zabbix/zabbix_agentd.conf
+
+    - name: 启动zabbix-agent
+      service: name=zabbix-agent state=started enabled=true
