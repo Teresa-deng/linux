@@ -1,0 +1,21 @@
+server { 
+   listen 192.168.101.211:80;
+   server_name {{ server_name }};
+   root /var/www/wordpress;
+   index index.php index.html;
+
+
+   location ~* \.(gif|jpg|jpeg|png|css|js)$ {
+       expires  30;
+       }
+   location ~ \.php$ {
+       root     /var/www/wordpress;
+       fastcgi_pass   {{ php_ip }}:9000;
+       fastcgi_index  index.php;   
+       fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+       include        fastcgi_params;
+       }
+
+
+}
+

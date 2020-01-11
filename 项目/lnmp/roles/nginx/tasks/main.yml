@@ -1,0 +1,44 @@
+---
+- name: 下载nginx源码包
+  #get_url: url=http://nginx.org/download/nginx-{{ nginx_version }}.tar.gz dest=/tmp
+  copy: src=nginx-{{ nginx_version }}.tar.gz dest=/tmp
+
+
+- name: 安装nginx
+  shell: cd /tmp &&
+         tar xf nginx-{{ nginx_version }}.tar.gz &&
+         cd nginx-{{ nginx_version }} &&
+         /usr/bin/bash configure --prefix=/usr/local/nginx --with-http_dav_module --with-http_stub_status_module --with-http_addition_module --with-http_sub_module --with-http_flv_module --with-http_mp4_module --with-http_ssl_module --with-http_gzip_static_module --user=nginx --group=nginx && make -j 2 &&  make install
+
+- name: 优化nginx启动
+  shell: ln -s /usr/local/nginx/sbin/nginx /usr/local/sbin/
+ 
+ 
+- name: 创建nginx组
+  group: name=nginx gid=1006 state=present
+
+- name: 创建用户
+  user: name=nginx uid=900 shell=/sbin/nologin create_home=no group=nginx state=present
+
+- name: 创建虚拟主机配置文件路径
+  file: dest=/usr/local/nginx/conf/vhost state=directory
+ 
+- name: 复制nginx服务主配置文件
+  copy: src=nginx.conf dest=/usr/local/nginx/conf
+  notify: reload nginx
+
+- name: 修改配置文件
+  shell: sed -i '1ifastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;' /usr/local/nginx/conf/fastcgi_params
+
+- name: 创建虚拟ip测试
+  shell: ifconfig ens32:0 192.168.101.211/24
+
+- name: 复制论坛项目虚拟主机配置文件
+  template: src=wordpress.j2  dest=/usr/local/nginx/conf/vhost/wordpress.conf
+
+- name: 复制nginx服务控制脚本
+  copy: src=nginx.service dest=/usr/lib/systemd/system/ mode=755
+
+- name: 启动nginx服务
+  service: name=nginx state=started enabled=yes
+

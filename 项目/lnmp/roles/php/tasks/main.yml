@@ -1,0 +1,59 @@
+---
+- name: 安装php依赖包
+  yum: name={{item}} state=present
+  loop:
+     - gd-devel
+     - libxml2-devel
+     - libcurl-devel
+     - libjpeg-devel
+     - libpng-devel
+     - openssl-devel
+     - bzip2-devel
+
+- name: 上传libmcrypt依赖包
+  copy: src=libmcrypt-2.5.8.tar.gz dest=/tmp
+
+- name: 安装libmcrypt依赖包 
+  shell: cd /tmp && tar xf libmcrypt-2.5.8.tar.gz && cd libmcrypt-2.5.8 && 
+         /tmp/libmcrypt-2.5.8/configure --prefix=/usr/local/libmcrypt && make && make install
+        
+
+- name: 下载php源码包
+ # get_url: url=http://docs.php.net/distributions/php-{{ php_version }}.tar.gz dest=/tmp/php-{{ php_version }}.tar.gz
+  copy: src=php-{{ php_version }}.tar.gz dest=/tmp
+
+- name: 安装php
+  shell: cd /tmp &&
+        tar xf php-{{ php_version}}.tar.gz &&
+        cd php-{{ php_version}} &&
+        /usr/bin/bash configure --prefix=/usr/local/php7 --with-mysql=mysqlnd --with-pdo-mysql=mysqlnd --with-mysqli=mysqlnd --with-openssl --enable-fpm --enable-sockets --enable-sysvshm --enable-mbstring --with-freetype-dir --with-jpeg-dir --with-png-dir --with-zlib --with-libxml-dir=/usr --enable-xml --with-mhash --with-mcrypt=/usr/local/libmcrypt --with-config-file-path=/etc --with-config-file-scan-dir=/etc/php.d --with-bz2 --enable-maintainer-zts && make -j 2  && make install
+
+- name: 分离式搭建创建的nginx用户组
+  group: name=nginx gid=1006 state=present
+
+- name: 分离式搭建创建的nginx用户
+  user: name=nginx create_home=no uid=900 shell=/sbin/nologin group=nginx state=present
+
+- name: 复制php模块配置文件
+  copy: src=php.ini dest=/etc/
+
+- name: 复制php-fpm配置文件
+  copy: src=php-fpm.conf dest=/usr/local/php7/etc/
+
+- name: 复制php启动脚本
+  copy: src=php-fpm dest=/etc/init.d/ mode=755
+
+- name: 执行启动脚本添加开机启动
+  shell: chkconfig --add php-fpm && chkconfig php-fpm on
+
+- name: 传输修改模板
+  copy: src=php.sh dest=/usr/local/php7/etc/php-fpm.d mode=755
+
+- name: 修改php子配置文件
+  shell: /usr/bin/bash /usr/local/php7/etc/php-fpm.d/php.sh
+  notify: reload php
+
+- name: 启动php-fpm
+  service: name=php-fpm state=started
+
+

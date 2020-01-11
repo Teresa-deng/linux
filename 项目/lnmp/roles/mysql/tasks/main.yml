@@ -1,0 +1,69 @@
+---
+     - name: 安装mysql依赖包
+       yum: name={{ item }} state=present
+       loop:
+           - gcc
+           - gcc-c++
+           - ncurses-devel
+           - cmake
+           - python-devel
+           - python2-pip
+           - expect
+     
+     - name: 创建mysql用户组
+       group: name=mysql state=present
+     
+     - name: 创建mysql用户
+       user: name=mysql shell=/sbin/nologin create_home=no group=mysql state=present
+     - name: 上传boost包并解压
+       unarchive: src=boost_1_59_0.tar.gz dest=/tmp group=mysql owner=mysql copy=yes
+
+     - name: 移动boost包目录
+       command: mv /tmp/boost_1_59_0 /usr/local/boost
+     
+     - name: 解压mysql数据库
+       unarchive: src=mysql-5.7.22.tar.gz dest=/tmp copy=yes
+     
+     - name: 编译安装mysql数据库
+       shell: cd /tmp/mysql-5.7.22/ && cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DMYSQL_DATADIR=/usr/local/mysql/data -DWITH_BOOST=/usr/local/boost -DSYSCONFDIR=/etc -DWITH_INNOBASE_STORAGE_ENGINE=1 -DWITH_PARTITION_STORAGE_ENGINE=1 -DWITH_FEDERATED_STORAGE_ENGINE=1 -DWITH_DTRACE=0 -DDEFAULT_CHARSET=utf9mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci && make -j 2  && make install
+      
+
+     - name: 创建mysql所需目录
+       file: name=/usr/local/mysql/{{ item }}  owner=mysql group=mysql  state=directory
+       with_items:
+           - logs
+           - data
+     
+     
+     - name: 创建mysql配置文件
+       copy: src=my.cnf dest=/etc
+     
+     - name: 复制启动脚本
+       copy: src=mysql.service dest=/etc/init.d mode=755
+
+     - name: 复制控制文件
+       copy: src=mysqld.service   dest=/usr/lib/systemd/system/
+
+     - name: 优化环境变量
+       shell: echo "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/mysql/bin/" >> /etc/profile 
+
+     - name: 全局变量
+       shell: source /etc/profile
+
+     - name: 更改msyql数据库属主属组
+       shell: chown -R mysql:mysql /usr/local/mysql/
+
+     - name: mysql脚本准备
+       template: src=mysql.j2 dest=/usr/local/mysql/mysql.sh mode=755
+     
+     - name: 初始化数据库
+       
+       shell: /usr/local/mysql/bin/mysqld --initialize-insecure --user=mysql --basedir=/usr/lcoal/mysql --datadir=/usr/local/mysql/data 
+     
+     - name: 启动mysql数据库  
+       service: name=mysqld state=started enabled=yes
+
+     - name: 创建mysql数据库wordpress项目 
+       shell: /usr/local/mysql/mysql.sh         
+      
+     

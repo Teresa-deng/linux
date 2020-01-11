@@ -1,0 +1,37 @@
+---
+- name: 开始安装nginx
+  hosts: nginx
+  remote_user: root
+  
+  roles:
+     - role: common
+     - role: nginx
+       tags: ["nginx"]
+
+- name: 开始安装php
+  hosts: php
+  remote_user: root
+  
+  roles:
+     - role: common
+     - role: php
+       tags: ["php"]
+   
+- name: 开始安装mysql
+  hosts: mysql
+  remote_user: root
+  
+  roles:
+     - role: common
+     - role: mysql
+       tags: ["mysql"]
+
+- name: 部署项目wordpress
+  hosts: nginx
+  remote_user: root
+  
+  roles:
+      - role: common
+      - role: wordpress
+        tags: ["wordpress"]
+

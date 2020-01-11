@@ -1,0 +1,17 @@
+---
+- name: 传输wordpress项目
+  copy: src=wordpress-5.2.3-zh_CN.zip dest=/tmp
+
+- name: 创建项目路径
+  file: name=/var/www/  state=directory
+
+- name: 解压wordpress项目
+  unarchive: src=/tmp/wordpress-5.2.3-zh_CN.zip dest=/var/www copy=no
+
+- name: 复制wordpress项目配置文件
+  template: src=wp-config.php dest=/var/www/wordpress
+
+- name: 修改wordpress项目的属性
+  file: path=/var/www/wordpress owner=nobody group=nobody state=directory recurse=yes
+
+

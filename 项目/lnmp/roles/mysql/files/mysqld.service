@@ -1,0 +1,16 @@
+[Unit]
+Description=mysqldapi
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/usr/local/mysql/logs/mysqld.pid
+ExecStart=/etc/init.d/mysql.service start
+ExecReload=/etc/init.d/mysql.service restart
+ExecStop=/etc/init.d/mysql.service stop
+#Restart=on-failure
+#RestartPreventExitStatus=1
+#PrivateTmp=Flase
+
+[Install]
+WantedBy=multi-user.target

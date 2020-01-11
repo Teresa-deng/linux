@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f 
+spawn /usr/local/mysql/bin/mysqladmin -uroot -p password
+expect "Enter password:" {send "\r"}
+expect "New password:" {send "{{db_password}}\r"}
+expect "Confirm new password:" {send "{{db_password}}\r"}
+
+spawn /usr/local/mysql/bin/mysql -u{{db_user}} -p{{db_password}}
+expect "mysql>" {send "create database {{wp_db_name}};\r"}
+expect "mysql>" {send "grant all on {{wp_db_name}}.* to {{wp_dp_user}}@'%' identified by '{{wp_dp_password}}';\r"}
+expect "mysql>" {send "flush privileges;\r"}
+expect "mysql>" {send "exit\r"}
+

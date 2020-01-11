@@ -1,0 +1,17 @@
+
+# Nginx
+nginx_version: 1.16.1
+server_name: wordpress.com
+
+# php
+php_version: 7.1.19
+php_ip: 192.168.101.206
+
+# Wordpress
+db_host: 192.168.101.206
+db_port: 3306
+wp_db_name: wordpress
+wp_dp_user: wordpress
+wp_dp_password: 123123
+db_user: root
+db_password: 123123
